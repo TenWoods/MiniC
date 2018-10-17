@@ -10,10 +10,11 @@ struct node * mknode(int kind,struct node *first,struct node *second, struct nod
   return T;
 }
 
-void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
-  int i=1;
-  struct node *T0;
-  if (T)
+void display(struct node *T,int indent)  
+{//对抽象语法树的先根遍历
+    int i=1;
+    struct node *T0;
+    if (T)
 	{
 	switch (T->kind) {
 	case EXT_DEF_LIST:  display(T->ptr[0],indent);    //显示该外部定义列表中的第一个
@@ -105,15 +106,16 @@ void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
                             T0=T0->ptr[1];
                         }
                         break;
-	case ID:	        printf("%*cID： %s\n",indent,' ',T->type_id);
+	case ID:
+            	        printf("%*cID： %s\n",indent,' ',T->type_id);
                         break;
 	case INT:	        printf("%*cINT：%d\n",indent,' ',T->type_int);
                         break;
 	case FLOAT:	        printf("%*cFLAOT：%f\n",indent,' ',T->type_float);
                         break;
     case CHAR:          printf("%*cCHAR : %c\n", indent,' ',T->type_char);
-                        break;
-    case Arry_List:     printf("%*cArryList : %c\n", indent,' ',T->type_int);
+    case Array_List:    printf("%*cArray_List : %c\n", indent,' ',T->type_id);
+                        display(T->ptr[0],indent+3);
                         break;
 	case ASSIGNOP:
 	case AND:

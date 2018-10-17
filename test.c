@@ -1,7 +1,8 @@
 int main()
-{
+{ /* */
     int a=0,b=1,c;
-    char d='~';
+    //char d='~';
+    int e[10];
     while (a<b)
     {
 
@@ -13,5 +14,12 @@ int f;
 
 float test()
 {
+    if(a==b)
+    {
 
+    }
+    else
+    {
+        
+    }
 }

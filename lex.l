@@ -14,7 +14,7 @@ typedef union
 	struct node *ptr;
 } YYLVAL;
 #define YYSTYPE YYLVAL
-
+void comment();
 %}
 %option yylineno
 
@@ -57,7 +57,9 @@ char [A-Z]|[a-z]|"!"|"@"|"#"|"$"|"%"|"^"|"&"|"*"|"("|")"|"_"|"-"|"+"|"="|"\\"|"{
 "{"			{return LC;}
 "}"			{return RC;}
 "["         {return LB;}
-"]"         {return RB}
+"]"         {return RB;}
+"//"[^\n]*\n  ;
+"/*"        comment();
 [\n]        {yycolumn=1;}   
 [ \r\t]     {}   
 .			{printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n",yytext,yylineno);}
@@ -65,4 +67,22 @@ char [A-Z]|[a-z]|"!"|"@"|"#"|"$"|"%"|"^"|"&"|"*"|"("|")"|"_"|"-"|"+"|"="|"\\"|"{
 int yywrap()
 {
 	return 1;
+}
+
+void comment()
+{
+    char c, c1;
+
+loop:
+    while ((c = input()) != '*' && c != 0)
+        putchar(c);
+
+    if ((c1 = input()) != '/' && c != 0)
+    {
+        unput(c1);
+        goto loop;
+    }
+
+    if (c != 0)
+        putchar(c1);
 }
