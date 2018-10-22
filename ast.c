@@ -12,6 +12,8 @@ struct node * mknode(int kind,struct node *first,struct node *second, struct nod
 
 void display(struct node *T,int indent)  
 {//对抽象语法树的先根遍历
+    //debug
+    //printf("%d", T->kind);
     int i=1;
     struct node *T0;
     if (T)
@@ -106,16 +108,18 @@ void display(struct node *T,int indent)
                             T0=T0->ptr[1];
                         }
                         break;
-	case ID:
-            	        printf("%*cID： %s\n",indent,' ',T->type_id);
+	case ID:            printf("%*cID： %s\n",indent,' ',T->type_id);
+                        if (T->ptr[0] != NULL)
+                        {
+                            printf("%*c数组长度: %d\n", indent + 3,' ',T->ptr[0]->type_int);
+                            //printf("是个数组");
+                        }
                         break;
 	case INT:	        printf("%*cINT：%d\n",indent,' ',T->type_int);
                         break;
 	case FLOAT:	        printf("%*cFLAOT：%f\n",indent,' ',T->type_float);
                         break;
     case CHAR:          printf("%*cCHAR : %c\n", indent,' ',T->type_char);
-    case Array_List:    printf("%*cArray_List : %c\n", indent,' ',T->type_id);
-                        display(T->ptr[0],indent+3);
                         break;
 	case ASSIGNOP:
 	case AND:

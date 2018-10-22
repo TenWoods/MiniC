@@ -21,7 +21,7 @@ void display(struct node *,int);
 };
 
 //%type 定义非终结符的语义值类型
-%type  <ptr> program ExtDefList ExtDef  Specifier ExtDecList FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args LIST_INT
+%type  <ptr> program ExtDefList ExtDef  Specifier ExtDecList FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args List_INT
 
 //% token 定义终结符的语义值类型
 %token <type_int> INT              //指定INT的语义值是type_int，有词法分析得到的数值
@@ -66,10 +66,9 @@ ExtDecList: VarDec {$$=$1;}       /*每一个EXT_DECLIST的结点，其第一棵
         ; 
 /*变量名或函数名*/ 
 VarDec:  ID {$$=mknode(ID,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}   //ID结点，标识符符号串存放结点的type_id
-        | ID LB LIST_INT RB        {$$=mknode(Array_List,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);} //数组
+        | ID LB List_INT RB        {$$=mknode(ID,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);} //数组
         ;
-/*数组长度*/
-LIST_INT : INT {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;} 
+List_INT: INT {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
         ;
 
 /*函数变量名和参数表列*/
