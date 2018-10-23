@@ -10,6 +10,7 @@ struct node * mknode(int kind,struct node *first,struct node *second, struct nod
   return T;
 }
 
+
 void display(struct node *T,int indent)  
 {//对抽象语法树的先根遍历
     //debug
@@ -109,10 +110,11 @@ void display(struct node *T,int indent)
                         }
                         break;
 	case ID:            printf("%*cID： %s\n",indent,' ',T->type_id);
-                        if (T->ptr[0] != NULL)
+                        struct node* tmp = T;
+                        while(tmp->ptr[0] != NULL)
                         {
                             printf("%*c数组长度: %d\n", indent + 3,' ',T->ptr[0]->type_int);
-                            //printf("是个数组");
+                            tmp = tmp->ptr[0];
                         }
                         break;
 	case INT:	        printf("%*cINT：%d\n",indent,' ',T->type_int);

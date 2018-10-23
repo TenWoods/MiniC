@@ -66,7 +66,7 @@ ExtDecList: VarDec {$$=$1;}       /*每一个EXT_DECLIST的结点，其第一棵
         ; 
 /*变量名或函数名*/ 
 VarDec:  ID {$$=mknode(ID,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}   //ID结点，标识符符号串存放结点的type_id
-        | ID LB List_INT RB        {$$=mknode(ID,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);} //数组
+        | VarDec LB List_INT RB        {$$=mknode(ID,$3,NULL,NULL,yylineno);} //数组
         ;
 List_INT: INT {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
         ;
@@ -106,11 +106,12 @@ Def: Specifier DecList SEMI {$$=mknode(VAR_DEF,$1,$2,NULL,yylineno);}
      ;
 /*单条语句定义多个变量*/
 DecList: Dec  {$$=mknode(DEC_LIST,$1,NULL,NULL,yylineno);}
+        | VarDec {$$=$1;}
         | Dec COMMA DecList  {$$=mknode(DEC_LIST,$1,$3,NULL,yylineno);}
+        ;
 	;
 /*定义变量名和初始化*/
-Dec:     VarDec  {$$=$1;}
-       | VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
+Dec:    VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
        ;
 /*运算表达式*/
 Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}//$$结点type_id空置未用，正好存放运算符
