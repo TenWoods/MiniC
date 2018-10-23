@@ -30,7 +30,7 @@ void display(struct node *,int);
 %token <type_char> CHAR
 
 %token LP RP LC RC LB RB SEMI COMMA   //用bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码
-%token PLUS PLUSASS MINUS MINUSASS STAR DIV ASSIGNOP AND OR NOT IF ELSE WHILE RETURN SELFPLUS SLEFMINUS
+%token PLUS PLUSASS MINUS MINUSASS STAR DIV ASSIGNOP AND OR NOT IF ELSE WHILE RETURN SELFPLUS SLEFMINUS FOR
 
 %left ASSIGNOP
 %left OR
@@ -66,7 +66,7 @@ ExtDecList: VarDec {$$=$1;}       /*每一个EXT_DECLIST的结点，其第一棵
         ; 
 /*变量名或函数名*/ 
 VarDec:  ID {$$=mknode(ID,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}   //ID结点，标识符符号串存放结点的type_id
-        | VarDec LB List_INT RB        {$$=mknode(ID,$3,NULL,NULL,yylineno);} //数组
+        | VarDec LB List_INT RB        {$$=mknode(Array,$1,$3,NULL,yylineno);} //数组
         ;
 List_INT: INT {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
         ;
@@ -111,7 +111,7 @@ DecList: Dec  {$$=mknode(DEC_LIST,$1,NULL,NULL,yylineno);}
         ;
 	;
 /*定义变量名和初始化*/
-Dec:    VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
+Dec:   VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
        ;
 /*运算表达式*/
 Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}//$$结点type_id空置未用，正好存放运算符
@@ -121,9 +121,11 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | Exp PLUS Exp  {$$=mknode(PLUS,$1,$3,NULL,yylineno);strcpy($$->type_id,"PLUS");}
       | Exp PLUSASS Exp  {$$=mknode(PLUSASS,$1,$3,NULL,yylineno);strcpy($$->type_id,"PLUSASS");} //复合加
       | Exp SELFPLUS      {$$=mknode(SELFPLUS,$1,NULL,NULL,yylineno);strcpy($$->type_id,"SELFPLUS");}  //自增
+      | SELFPLUS Exp     {$$=mknode(SELFPLUS,$2,NULL,NULL,yylineno);strcpy($$->type_id,"SELFPLUS");}  //自增
       | Exp MINUS Exp {$$=mknode(MINUS,$1,$3,NULL,yylineno);strcpy($$->type_id,"MINUS");}
       | Exp MINUSASS Exp {$$=mknode(MINUSASS,$1,$3,NULL,yylineno);strcpy($$->type_id,"PLUSASS");} //复合减
       | Exp SLEFMINUS  {$$=mknode(SLEFMINUS,$1,NULL,NULL,yylineno);strcpy($$->type_id,"SLEFMINUS");} //自减
+      | SLEFMINUS Exp {$$=mknode(SLEFMINUS,$2,NULL,NULL,yylineno);strcpy($$->type_id,"SLEFMINUS");} //自减
       | Exp STAR Exp  {$$=mknode(STAR,$1,$3,NULL,yylineno);strcpy($$->type_id,"STAR");}
       | Exp DIV Exp   {$$=mknode(DIV,$1,$3,NULL,yylineno);strcpy($$->type_id,"DIV");}
       | LP Exp RP     {$$=$2;}

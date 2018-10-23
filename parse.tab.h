@@ -69,8 +69,9 @@
      RETURN = 285,
      SELFPLUS = 286,
      SLEFMINUS = 287,
-     UMINUS = 288,
-     LOWER_THEN_ELSE = 289
+     FOR = 288,
+     UMINUS = 289,
+     LOWER_THEN_ELSE = 290
    };
 #endif
 
@@ -92,7 +93,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 96 "parse.tab.h"
+#line 97 "parse.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

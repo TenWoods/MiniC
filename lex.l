@@ -35,6 +35,7 @@ char [A-Z]|[a-z]|"!"|"@"|"#"|"$"|"%"|"^"|"&"|"*"|"("|")"|"_"|"-"|"+"|"="|"\\"|"{
 "if"         {return IF;}
 "else"       {return ELSE;}
 "while"      {return WHILE;}
+"for"        {return FOR;}
 
 {id}       {strcpy(yylval.type_id,  yytext); return ID;/*由于关键字的形式也符合表示符的规则，所以把关键字的处理全部放在标识符的前面，优先识别*/}
 ";"			{return SEMI;}

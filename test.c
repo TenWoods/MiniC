@@ -1,12 +1,12 @@
-int a = 1;
+int a;
 float b;
-char c[2][2];
+int c[2];
 
 int main()
 {
     int a;
     float b;
-    int c[5];
+    int c[5][2];
     char d = 'a';
     if (a == 0)
     {
@@ -20,7 +20,7 @@ int main()
     while (b > 0)
     {
         a++;
-        a--;
+        --a;
     }
     //注释
     /*注释*/
