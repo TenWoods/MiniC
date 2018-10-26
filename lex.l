@@ -73,7 +73,6 @@ int yywrap()
 void comment()
 {
     char c, c1;
-
 loop:
     while ((c = input()) != '*' && c != 0)
         putchar(c);
@@ -83,7 +82,4 @@ loop:
         unput(c1);
         goto loop;
     }
-
-    if (c != 0)
-        putchar(c1);
 }

@@ -10,6 +10,7 @@ extern char *yytext;
 extern FILE *yyin;
 void yyerror(const char* fmt, ...);
 void display(struct node *,int);
+int TypeCheck(char* type);
 %}
 
 %union {
@@ -47,7 +48,7 @@ void display(struct node *,int);
 
 %%
 /*开始符*/
-program: ExtDefList {display($1,0);}
+program: ExtDefList {semantic_Analysis0($1);}
         ; 
 /*外部定义列表*/
 ExtDefList: {$$=NULL;} | ExtDef ExtDefList {$$=mknode(EXT_DEF_LIST,$1,$2,NULL,yylineno);}   //每一个EXTDEFLIST的结点，其第1棵子树对应一个外部变量声明或函数
@@ -58,7 +59,7 @@ ExtDef: Specifier ExtDecList SEMI {$$=mknode(EXT_VAR_DEF,$1,$2,NULL,yylineno);} 
         | error SEMI   {$$=NULL; }
         ;
 /*类型标识符*/
-Specifier: TYPE {$$=mknode(TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type=!strcmp($1,"int")?INT:FLOAT;$$->type=!strcmp($1,"float")?FLOAT:CHAR}   
+Specifier: TYPE {$$=mknode(TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type=TypeCheck($1);}   
         ;    
 /*外部变量名列表*/
 ExtDecList: VarDec {$$=$1;}       /*每一个EXT_DECLIST的结点，其第一棵子树对应一个变量名(ID类型的结点),第二棵子树对应剩下的外部变量名*/
@@ -106,12 +107,11 @@ Def: Specifier DecList SEMI {$$=mknode(VAR_DEF,$1,$2,NULL,yylineno);}
      ;
 /*单条语句定义多个变量*/
 DecList: Dec  {$$=mknode(DEC_LIST,$1,NULL,NULL,yylineno);}
-        | VarDec {$$=$1;}
         | Dec COMMA DecList  {$$=mknode(DEC_LIST,$1,$3,NULL,yylineno);}
-        ;
 	;
 /*定义变量名和初始化*/
-Dec:   VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
+Dec:   VarDec {$$=$1;}
+       | VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
        ;
 /*运算表达式*/
 Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}//$$结点type_id空置未用，正好存放运算符
@@ -133,6 +133,7 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | NOT Exp       {$$=mknode(NOT,$2,NULL,NULL,yylineno);strcpy($$->type_id,"NOT");}
       | ID LP Args RP {$$=mknode(FUNC_CALL,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);}  //函数调用(含参)
       | ID LP RP      {$$=mknode(FUNC_CALL,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}//函数调用(无参)
+      | ID LB List_INT RB  {$$=mknode(Array_Call,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);}//数组索引调用
       | ID            {$$=mknode(ID,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
       | INT           {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}      //整常数常量
       | FLOAT         {$$=mknode(FLOAT,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FLOAT;} //浮点数常量
@@ -153,6 +154,23 @@ int main(int argc, char *argv[])
 	yylineno=1;
 	yyparse();
 	return 0;
+}
+
+int TypeCheck(char* type)
+{
+    if (!strcmp(type,"int"))
+	{
+		return INT;
+	}
+	if (!strcmp(type,"float"))
+	{
+		printf("%s", type);
+		return FLOAT;
+	}
+	if (!strcmp(type,"char"))
+	{
+		return CHAR;
+	}
 }
 
 #include<stdarg.h>
