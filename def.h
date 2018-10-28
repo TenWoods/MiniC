@@ -51,7 +51,7 @@ struct node
     int pos;                      //语法单位所在位置行号
     int offset;                    //偏移量
     int width;                    //占数据字节数
-    int num;
+    int num;                      //变量个数
 };
 
 struct symbol 
@@ -64,6 +64,8 @@ struct symbol
     char flag;          //符号标记，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
     char offset;        //外部变量和局部变量在其静态数据区或活动记录中的偏移量
 				   //或函数活动记录大小，目标代码生成时使用
+    
+    int listLength[10];  //数组长度
     //其它...
 };
 

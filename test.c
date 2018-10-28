@@ -1,6 +1,11 @@
+int func(int a)
+{
+    return 1;
+}
+
 int main()
 {
-    int i;
-    i = 0;
-    i++;
+    int a;
+    int n;
+    a = 1;
 }
