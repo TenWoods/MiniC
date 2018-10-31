@@ -1,11 +1,11 @@
 int func(int a)
 {
-    return 1;
-}
 
+}
 int main()
 {
-    int a;
-    int n;
-    a = 1;
+    int a[3];
+    int b,c;
+    float f;
+    func(f);
 }

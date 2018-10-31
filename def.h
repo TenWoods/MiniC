@@ -66,7 +66,8 @@ struct symbol
 				   //或函数活动记录大小，目标代码生成时使用
     
     int listLength[10];  //数组长度
-    //其它...
+    int isArray;
+        //其它...
 };
 
 //符号表，是一个顺序栈，index初值为0

@@ -407,19 +407,11 @@ void ext_var_list(struct node *T){  //处理变量列表
             rtn=fillSymbolTable(T->type_id,newAlias(),LEV,T->type,'V',T->offset);  //最后一个变量名
             if (rtn==-1)
                 semantic_error(T->pos,T->type_id, "变量重复定义");
-            else T->place=rtn;
+            else 
+            T->place=rtn;
             T->num=1;
             break;
         case Array:
-            if (T->ptr[0] == NULL)
-            {
-                printf("???");
-            }
-            if (T->ptr[1] == NULL)
-            {
-                printf("???");
-            }
-            printf("%d   %d", T->type,T->ptr[1]->type_int);
             rtn = fillSymbolTable(T->ptr[0]->type_id, newAlias(),LEV,T->type,'V',T->offset * T->ptr[1]->type_int);
             if (rtn == -1)
                 semantic_error(T->pos,T->type_id, "变量重复定义");
@@ -562,6 +554,8 @@ void Exp(struct node *T)
                 rtn=searchSymbolTable(T->type_id);
                 if (rtn==-1)
                     semantic_error(T->pos,T->type_id, "变量未定义");
+                if (symbolTable.symbols[rtn].isArray == 1)
+                    semantic_error(T->pos,T->type_id, "不能对数组名赋值");
                 if (symbolTable.symbols[rtn].flag=='F')
                     semantic_error(T->pos,T->type_id, "是函数名，类型不匹配");
                 else 
@@ -639,7 +633,7 @@ void Exp(struct node *T)
                     result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                     result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                     T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
-                    }
+                }
                 break;
 	    case AND:   //按算术表达式方式计算布尔值，未写完
 	    case OR:    //按算术表达式方式计算布尔值，未写完
@@ -676,10 +670,11 @@ void Exp(struct node *T)
                 T->width=T->ptr[0]->width+T->ptr[1]->width+(T->type==INT?4:T->type==FLOAT?8:1);
                 break;
         case SELFPLUS:
-        case SLEFMINUS:
                 Exp(T->ptr[0]);
-                if (T->ptr[0]->kind != ID)
-                    semantic_error(T->pos, "", "自增自减操作对象不是变量");
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
+                    semantic_error(T->pos, "", "自增操作对象不是变量");
+                if (T->ptr[0]->type == CHAR)
+                    semantic_error(T->pos, "", "自增操作对象不能是字符");
                 T->type=T->ptr[0]->type;
                 T->width=T->ptr[0]->width;
                 T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
@@ -687,11 +682,38 @@ void Exp(struct node *T)
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
+                T->code=merge(2,T->code,genIR(SELFPLUS,opn1,opn2,result));
                 break;
-	    case NOT:   //未写完整
+        case SLEFMINUS:
+                Exp(T->ptr[0]);
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
+                    semantic_error(T->pos, "", "自减操作对象不是变量");
+                if (T->ptr[0]->type == CHAR)
+                    semantic_error(T->pos, "", "自减操作对象不能是字符");
+                T->type=T->ptr[0]->type;
+                T->width=T->ptr[0]->width;
+                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
+                opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                T->code=merge(2,T->code,genIR(SLEFMINUS,opn1,opn2,result));
                 break;
-	    case UMINUS://未写完整
+	    case NOT:
+                Exp(T->ptr[0]);
+                T->type=T->ptr[0]->type;
+                T->width=T->ptr[0]->width;
+                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
+                opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                T->code=merge(2,T->code,genIR(NOT,opn1,opn2,result));
+                break;
+	    case UMINUS:
+                Exp(T->ptr[0]);
+                T->type=T->ptr[0]->type;
+                T->width=T->ptr[0]->width;
                 break;
         case Array_Call:
                 rtn = searchSymbolTable(T->type_id);
@@ -724,7 +746,14 @@ void Exp(struct node *T)
                     T->code=T->ptr[0]->code;
                     }
                 else {T->width=width; T->code=NULL;}
-                match_param(rtn,T->ptr[0]);   //处理所以参数的匹配
+                if (T->ptr[0]==NULL && symbolTable.symbols[rtn].paramnum > 0)
+                {
+                    semantic_error(T->pos,"", "函数调用参数太少");
+                }
+                else
+                {
+                     match_param(rtn,T->ptr[0]);   //处理所以参数的匹配
+                }
                     //处理参数列表的中间代码
                 T0=T->ptr[0];
                 while (T0) {
@@ -866,7 +895,7 @@ void semantic_Analysis(struct node *T)
                 T->width+=T->ptr[1]->width;
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 }
-             prn_symbol();       //c在退出一个符合语句前显示的符号表
+             //prn_symbol();       //c在退出一个符合语句前显示的符号表
              LEV--;    //出复合语句，层号减1
              symbolTable.index=symbol_scope_TX.TX[--symbol_scope_TX.top]; //删除该作用域中的符号
              break;
@@ -908,6 +937,7 @@ void semantic_Analysis(struct node *T)
                             semantic_error(T0->ptr[0]->pos,T0->ptr[0]->type_id, "变量重复定义");
                         else T0->ptr[0]->place=rtn;
                         T->width+=width;
+                        symbolTable.symbols[rtn].isArray = 0;
                     }
                     else if (T0->ptr[0]->kind==Array)
                     {
@@ -931,6 +961,7 @@ void semantic_Analysis(struct node *T)
                         }
                         strcpy(symbolTable.symbols[rtn].name,tmp->type_id);
                         T->width+=width*plusWidth;
+                        symbolTable.symbols[rtn].isArray = 1;
                     }
                     else if (T0->ptr[0]->kind==ASSIGNOP)
                     {
@@ -1075,6 +1106,6 @@ void semantic_Analysis0(struct node *T)
     symbol_scope_TX.top=1;
     T->offset=0;              //外部变量在数据区的偏移量
     semantic_Analysis(T);
-    //objectCode(T->code);
+    prnIR(T->code);
  } 
 

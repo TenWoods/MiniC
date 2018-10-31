@@ -2212,7 +2212,6 @@ int TypeCheck(char* type)
 	}
 	if (!strcmp(type,"float"))
 	{
-		printf("%s", type);
 		return FLOAT;
 	}
 	if (!strcmp(type,"char"))
