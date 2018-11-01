@@ -258,12 +258,16 @@ void prnIR(struct codenode *head){
              sprintf(opnstr1,"#%d",h->opn1.const_int);
         if (h->opn1.kind==FLOAT)
              sprintf(opnstr1,"#%f",h->opn1.const_float);
+        if (h->opn1.kind==CHAR)
+             sprintf(opnstr1,"#%c",h->opn1.const_char);
         if (h->opn1.kind==ID)
              sprintf(opnstr1,"%s",h->opn1.id);
         if (h->opn2.kind==INT)
              sprintf(opnstr2,"#%d",h->opn2.const_int);
         if (h->opn2.kind==FLOAT)
              sprintf(opnstr2,"#%f",h->opn2.const_float);
+        if (h->opn1.kind==CHAR)
+             sprintf(opnstr2,"#%c",h->opn1.const_char);
         if (h->opn2.kind==ID)
              sprintf(opnstr2,"%s",h->opn2.id);
         sprintf(resultstr,"%s",h->result.id);
@@ -598,7 +602,7 @@ void Exp(struct node *T)
         case CHAR:
                 T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset);   //为浮点常量生成一个临时变量
                 T->type=CHAR;
-                opn1.kind=CHAR; opn1.const_float=T->type_char;
+                opn1.kind=CHAR; opn1.const_char=T->type_char;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
                 result.offset=symbolTable.symbols[T->place].offset;
                 T->code=genIR(ASSIGNOP,opn1,opn2,result);
@@ -693,7 +697,7 @@ void Exp(struct node *T)
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                T->code= merge(2, T->code, genIR(SELFPLUS,opn1,opn2,result));
+                T->code=genIR(SELFPLUS,opn1,opn2,result);
                 break;
         case SLEFMINUS:
                 Exp(T->ptr[0]);
@@ -708,7 +712,7 @@ void Exp(struct node *T)
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                T->code=merge(2,T->code,genIR(SLEFMINUS,opn1,opn2,result));
+                T->code=genIR(SLEFMINUS,opn1,opn2,result);
                 break;
         case PLUSASS:
                 Exp(T->ptr[0]);
