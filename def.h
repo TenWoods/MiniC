@@ -21,6 +21,7 @@ struct opn
     };
     int level;                 //变量的层号，0表示是全局变量，数据保存在静态数据区
     int offset;                 //变量单元偏移量，或函数在符号表的定义位置序号，目标代码生成时用
+    char *rtype;
 };
 
 struct codenode 

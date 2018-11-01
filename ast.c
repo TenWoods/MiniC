@@ -271,6 +271,7 @@ void prnIR(struct codenode *head){
         if (h->opn2.kind==ID)
              sprintf(opnstr2,"%s",h->opn2.id);
         sprintf(resultstr,"%s",h->result.id);
+        char c[10];
         switch (h->op) {
             case ASSIGNOP:  printf("  %s := %s\n",resultstr,opnstr1);
                             break;
@@ -280,6 +281,17 @@ void prnIR(struct codenode *head){
             case DIV: 
                       printf("  %s := %s %c %s\n",resultstr,opnstr1, \
                       h->op==PLUS?'+':h->op==MINUS?'-':h->op==STAR?'*':'\\',opnstr2);
+                      break;
+            case AND:   
+	        case OR:   
+	        case RELOP: 
+                      if (h->op == AND)
+                        strcpy(c,"&&");
+                      else if (h->op == OR)
+                        strcpy(c,"||");
+                      else
+                        strcpy(c,h->result.rtype);
+                      printf("  %s := %s %s %s\n",resultstr,opnstr1,c,opnstr2);
                       break;
             case SELFPLUS:
             case SLEFMINUS:
@@ -650,13 +662,30 @@ void Exp(struct node *T)
                     T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
                 }
                 break;
-	    case AND:   //按算术表达式方式计算布尔值，未写完
-	    case OR:    //按算术表达式方式计算布尔值，未写完
-	    case RELOP: //按算术表达式方式计算布尔值，未写完
+	    case AND:   
+	    case OR:    
+	    case RELOP: 
                 T->type=INT;
                 T->ptr[0]->offset=T->ptr[1]->offset=T->offset;
                 Exp(T->ptr[0]);
                 Exp(T->ptr[1]);
+                if (T->ptr[0]->type != T->ptr[1]->type)
+                {
+                    semantic_error(T->pos, "", "双目运算两边类型不一致");
+                }
+                if (T->ptr[0]->type==FLOAT || T->ptr[1]->type==FLOAT)
+                     T->type=FLOAT,T->width=T->ptr[0]->width+T->ptr[1]->width+4;
+                else T->type=INT,T->width=T->ptr[0]->width+T->ptr[1]->width+2;
+                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width+T->ptr[1]->width);
+                opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                opn1.type=T->ptr[0]->type;opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                opn2.kind=ID; strcpy(opn2.id,symbolTable.symbols[T->ptr[1]->place].alias);
+                opn2.type=T->ptr[1]->type;opn2.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
+                result.type=T->type;result.offset=symbolTable.symbols[T->place].offset;
+                result.rtype = T->type_id;
+                T->code=merge(3,T->ptr[0]->code,T->ptr[1]->code,genIR(T->kind,opn1,opn2,result));
+                T->width=T->ptr[0]->width+T->ptr[1]->width+(T->type==INT?4:T->type==FLOAT?8:1);
                 break;
 	    case PLUS:
 	    case MINUS:
