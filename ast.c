@@ -281,6 +281,12 @@ void prnIR(struct codenode *head){
             case SLEFMINUS:
                       printf("  %s := %s %c #1\n", resultstr, opnstr1, h->op==SELFPLUS?'+':'-');
                       break;
+            case PLUSASS:
+                      printf("  %s := %s %c %s\n", resultstr, resultstr, '+', opnstr1);
+                      break;
+            case MINUSASS:
+                      printf("  %s := %s %c %s\n", resultstr, resultstr, '-', opnstr1);
+                      break;
             case FUNCTION: printf("\nFUNCTION %s :\n",h->result.id);
                            break;
             case PARAM:    printf("  PARAM %s\n",h->result.id);
@@ -704,6 +710,48 @@ void Exp(struct node *T)
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 T->code=merge(2,T->code,genIR(SLEFMINUS,opn1,opn2,result));
                 break;
+        case PLUSASS:
+                Exp(T->ptr[0]);
+                Exp(T->ptr[1]);
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
+                    semantic_error(T->pos, "", "复合加操作对象不是变量");
+                if (T->ptr[0]->type != T->ptr[1]->type)
+                {
+                    if (T->ptr[0]->kind == Array_Call)
+                    {
+                        if (symbolTable.symbols[T->ptr[0]->place].type !=  T->ptr[1]->type)
+                            semantic_error(T->pos, "", "复合运算两边变量类型不一致");
+                    }
+                    else
+                        semantic_error(T->pos, "", "复合运算两边变量类型不一致");
+                }
+                opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);
+                opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                T->code=merge(2,T->code,genIR(PLUSASS,opn1,opn2,result));
+                break;
+        case MINUSASS:
+                Exp(T->ptr[0]);
+                Exp(T->ptr[1]);
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
+                    semantic_error(T->pos, "", "复合减操作对象不是变量");
+                if (T->ptr[0]->type != T->ptr[1]->type)
+                {
+                    if (T->ptr[0]->kind == Array_Call)
+                    {
+                        if (symbolTable.symbols[T->ptr[0]->place].type !=  T->ptr[1]->type)
+                            semantic_error(T->pos, "", "复合运算两边变量类型不一致");
+                    }
+                    else
+                        semantic_error(T->pos, "", "复合运算两边变量类型不一致");
+                }
+                opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);
+                opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                T->code=merge(2,T->code,genIR(MINUSASS,opn1,opn2,result));
+                break;
 	    case NOT:
                 Exp(T->ptr[0]);
                 T->type=T->ptr[0]->type;
@@ -731,6 +779,11 @@ void Exp(struct node *T)
                 {
                     semantic_error(T->pos, "", "数组访问越界");
                 }
+                T->place = rtn;
+                T->code=NULL;       //标识符不需要生成TAC
+                T->type=symbolTable.symbols[rtn].type;
+                T->offset=symbolTable.symbols[rtn].offset;
+                T->width=0;   //未再使用新单元
                 break;
         case FUNC_CALL: //根据T->type_id查出函数的定义，如果语言中增加了实验教材的read，write需要单独处理一下
                 rtn=searchSymbolTable(T->type_id);
@@ -952,6 +1005,7 @@ void semantic_Analysis(struct node *T)
                             semantic_error(T0->ptr[0]->pos, "", "数组长度不能等于0");
                         }
                         rtn=fillSymbolTable(T0->ptr[0]->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width);
+                        //printf("%s\n", symbolTable.symbols[rtn].alias);
                         if (rtn==-1)
                             semantic_error(T0->ptr[0]->pos,T0->ptr[0]->type_id, "变量重复定义");
                         else T0->ptr[0]->place=rtn;
@@ -1093,6 +1147,8 @@ void semantic_Analysis(struct node *T)
 	case UMINUS:
     case SELFPLUS:
     case SLEFMINUS:
+    case PLUSASS:
+    case MINUSASS:
     case Array_Call:
     case FUNC_CALL: Exp(T);          //处理基本表达式
                     break;
