@@ -273,8 +273,13 @@ void prnIR(struct codenode *head){
             case PLUS:
             case MINUS:
             case STAR:
-            case DIV: printf("  %s := %s %c %s\n",resultstr,opnstr1, \
+            case DIV: 
+                      printf("  %s := %s %c %s\n",resultstr,opnstr1, \
                       h->op==PLUS?'+':h->op==MINUS?'-':h->op==STAR?'*':'\\',opnstr2);
+                      break;
+            case SELFPLUS:
+            case SLEFMINUS:
+                      printf("  %s := %s %c #1\n", resultstr, opnstr1, h->op==SELFPLUS?'+':'-');
                       break;
             case FUNCTION: printf("\nFUNCTION %s :\n",h->result.id);
                            break;
@@ -682,7 +687,7 @@ void Exp(struct node *T)
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                T->code=merge(2,T->code,genIR(SELFPLUS,opn1,opn2,result));
+                T->code= merge(2, T->code, genIR(SELFPLUS,opn1,opn2,result));
                 break;
         case SLEFMINUS:
                 Exp(T->ptr[0]);
@@ -845,7 +850,7 @@ void semantic_Analysis(struct node *T)
                 semantic_Analysis(T->ptr[0]);  //处理函数参数列表
                 T->width=T->ptr[0]->width;
                 symbolTable.symbols[rtn].paramnum=T->ptr[0]->num;
-                T->code=merge(2,T->code,T->ptr[0]->code);  //连接函数名和参数代码序列
+                T->code=merge(3,T->ptr[1]->code,T->ptr[2]->code,genLabel(T->ptr[2]->Snext)); //连接函数名和参数代码序列
             }
             else symbolTable.symbols[rtn].paramnum=0,T->width=0;
             break;
@@ -882,7 +887,8 @@ void semantic_Analysis(struct node *T)
             symbol_scope_TX.TX[symbol_scope_TX.top++]=symbolTable.index;
             T->width=0;
             T->code=NULL;
-            if (T->ptr[0]) {
+            if (T->ptr[0]) 
+            {
                 T->ptr[0]->offset=T->offset;
                 semantic_Analysis(T->ptr[0]);  //处理该层的局部变量DEF_LIST
                 T->width+=T->ptr[0]->width;
@@ -1099,8 +1105,8 @@ void semantic_Analysis0(struct node *T)
     symbolTable.index=0;
     fillSymbolTable("read","",0,INT,'F',4);
     symbolTable.symbols[0].paramnum=0;//read的形参个数
-    fillSymbolTable("x","",1,INT,'P',12);
     fillSymbolTable("write","",0,INT,'F',4);
+    fillSymbolTable("x","",1,INT,'P',12);
     symbolTable.symbols[2].paramnum=1;
     symbol_scope_TX.TX[0]=0;  //外部变量在符号表中的起始序号为0
     symbol_scope_TX.top=1;

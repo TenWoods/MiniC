@@ -1,11 +1,9 @@
-int func(int a)
-{
-
-}
 int main()
 {
-    int a[3];
-    int b,c;
-    float f;
-    func(f);
+    int a[10];
+    int b;
+    if (b>0)
+    {
+        a[1]=1;
+    }
 }
