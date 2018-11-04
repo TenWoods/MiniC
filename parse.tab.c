@@ -1833,14 +1833,14 @@ yyreduce:
 
 /* Line 1455 of yacc.c  */
 #line 123 "parse.y"
-    {(yyval.ptr)=mknode(SELFPLUS,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SELFPLUS");;}
+    {(yyval.ptr)=mknode(USELFPLUS,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SELFPLUS");;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
 #line 124 "parse.y"
-    {(yyval.ptr)=mknode(SELFPLUS,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SELFPLUS");;}
+    {(yyval.ptr)=mknode(MSELFPLUS,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SELFPLUS");;}
     break;
 
   case 43:
@@ -1861,14 +1861,14 @@ yyreduce:
 
 /* Line 1455 of yacc.c  */
 #line 127 "parse.y"
-    {(yyval.ptr)=mknode(SLEFMINUS,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SLEFMINUS");;}
+    {(yyval.ptr)=mknode(USLEFMINUS,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SLEFMINUS");;}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
 #line 128 "parse.y"
-    {(yyval.ptr)=mknode(SLEFMINUS,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SLEFMINUS");;}
+    {(yyval.ptr)=mknode(MSLEFMINUS,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"SLEFMINUS");;}
     break;
 
   case 47:

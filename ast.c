@@ -273,7 +273,11 @@ void prnIR(struct codenode *head){
         sprintf(resultstr,"%s",h->result.id);
         char c[10];
         switch (h->op) {
-            case ASSIGNOP:  printf("  %s := %s\n",resultstr,opnstr1);
+            case ASSIGNOP:  
+                            if (h->result.kind==Array_Call)
+                                printf("  %s [%s] := %s\n",resultstr,opnstr2,opnstr1);
+                            else
+                                printf("  %s := %s\n",resultstr,opnstr1);
                             break;
             case PLUS:
             case MINUS:
@@ -295,7 +299,7 @@ void prnIR(struct codenode *head){
                       break;
             case SELFPLUS:
             case SLEFMINUS:
-                      printf("  %s := %s %c #1\n", resultstr, opnstr1, h->op==SELFPLUS?'+':'-');
+                      printf("  %s := %s %c %s\n", resultstr, opnstr1, h->op==SELFPLUS?'+':'-', opnstr2);
                       break;
             case PLUSASS:
                       printf("  %s := %s %c %s\n", resultstr, resultstr, '+', opnstr1);
@@ -655,11 +659,30 @@ void Exp(struct node *T)
                     T->type=T->ptr[0]->type;
                     T->width=T->ptr[1]->width;
                     T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
-                    opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个变量或临时变量
+                    opn1.kind=ID;
+                    strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个变量或临时变量
                     opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
-                    result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                    if(T->ptr[0]->kind == Array_Call)
+                    {
+                        result.kind=Array_Call;
+                        Exp(T->ptr[0]->ptr[0]);
+                        opn2.kind = ID;strcpy(opn2.id,symbolTable.symbols[T->ptr[0]->ptr[0]->place].alias);
+                        opn2.offset=symbolTable.symbols[T->ptr[0]->ptr[0]->place].offset;
+                    }
+                    else
+                    {
+                        result.kind=ID;
+                    }
+                    strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                     result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                    T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
+                    if (T->ptr[1]->kind==USELFPLUS||T->ptr[1]->kind==USLEFMINUS)
+                    {
+                        T->code=merge(2,genIR(ASSIGNOP,opn1,opn2,result), T->code);
+                    }
+                    else
+                    {
+                        T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
+                    }
                 }
                 break;
 	    case AND:   
@@ -713,7 +736,8 @@ void Exp(struct node *T)
                 T->code=merge(3,T->ptr[0]->code,T->ptr[1]->code,genIR(T->kind,opn1,opn2,result));
                 T->width=T->ptr[0]->width+T->ptr[1]->width+(T->type==INT?4:T->type==FLOAT?8:1);
                 break;
-        case SELFPLUS:
+        case USELFPLUS:
+        case MSELFPLUS:
                 Exp(T->ptr[0]);
                 if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
                     semantic_error(T->pos, "", "自增操作对象不是变量");
@@ -724,11 +748,14 @@ void Exp(struct node *T)
                 T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
                 opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                opn2.kind=INT;
+                opn2.const_int = 1;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 T->code=genIR(SELFPLUS,opn1,opn2,result);
                 break;
-        case SLEFMINUS:
+        case USLEFMINUS:
+        case MSLEFMINUS:
                 Exp(T->ptr[0]);
                 if (T->ptr[0]->kind != ID && T->ptr[0]->kind != Array_Call)
                     semantic_error(T->pos, "", "自减操作对象不是变量");
@@ -739,6 +766,8 @@ void Exp(struct node *T)
                 T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
                 opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                opn2.kind=INT;
+                opn2.const_int = 1;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 T->code=genIR(SLEFMINUS,opn1,opn2,result);
@@ -814,6 +843,8 @@ void Exp(struct node *T)
                 }
                 T->place = rtn;
                 T->code=NULL;       //标识符不需要生成TAC
+                result.kind=Array_Call; strcpy(result.id,symbolTable.symbols[T->place].alias);
+                result.offset=symbolTable.symbols[T->place].offset;
                 T->type=symbolTable.symbols[rtn].type;
                 T->offset=symbolTable.symbols[rtn].offset;
                 T->width=0;   //未再使用新单元
@@ -1178,8 +1209,10 @@ void semantic_Analysis(struct node *T)
 	case DIV:
 	case NOT:
 	case UMINUS:
-    case SELFPLUS:
-    case SLEFMINUS:
+    case USELFPLUS:
+    case MSELFPLUS:
+    case USLEFMINUS:
+    case MSLEFMINUS:
     case PLUSASS:
     case MINUSASS:
     case Array_Call:
