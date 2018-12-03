@@ -1018,7 +1018,7 @@ void semantic_Analysis(struct node *T)
                 T->width+=T->ptr[1]->width;
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 }
-             //prn_symbol();       //c在退出一个符合语句前显示的符号表
+             prn_symbol();       //c在退出一个符合语句前显示的符号表
              LEV--;    //出复合语句，层号减1
              symbolTable.index=symbol_scope_TX.TX[--symbol_scope_TX.top]; //删除该作用域中的符号
              break;
@@ -1234,6 +1234,6 @@ void semantic_Analysis0(struct node *T)
     symbol_scope_TX.top=1;
     T->offset=0;              //外部变量在数据区的偏移量
     semantic_Analysis(T);
-    prnIR(T->code);
+    //prnIR(T->code);
  } 
 
